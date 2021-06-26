@@ -1,11 +1,15 @@
 package com.robertobatts.leaderboard.utils;
 
 import com.robertobatts.leaderboard.exception.ValidationException;
+import org.apache.commons.lang3.StringUtils;
 
 public class ValidationUtils {
 
-    public static String checkIsNotNullOrEmpty(String string, String exceptionMessage) {
-        if (string == null || string.isEmpty()) {
+    private ValidationUtils() {
+    }
+
+    public static String checkIsNotBlank(String string, String exceptionMessage) {
+        if (StringUtils.isBlank(string)) {
             throw new ValidationException(exceptionMessage);
         }
         return string;

@@ -1,6 +1,5 @@
 package com.robertobatts.leaderboard.dto;
 
-import com.robertobatts.leaderboard.model.UserScoreModel;
 import com.robertobatts.leaderboard.utils.ValidationUtils;
 
 import java.util.Objects;
@@ -14,7 +13,7 @@ public final class UserScore {
     private long rank;
 
     public UserScore(String userId, long score, long rank) {
-        this.userId = ValidationUtils.checkIsNotNullOrEmpty(userId, "userId must not be null or empty");
+        this.userId = ValidationUtils.checkIsNotBlank(userId, "userId must not be null or empty");
         this.score = ValidationUtils.checkIsGte(score, 0, "score cannot be negative");
         this.rank = ValidationUtils.checkIsGte(rank, 0, "rank cannot be negative");
     }

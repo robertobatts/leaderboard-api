@@ -9,15 +9,15 @@ import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
-public final class UserScoreUpdaterUpdaterServiceImpl implements UserScoreUpdaterService {
+public final class UserScoreUpdaterServiceImpl implements UserScoreUpdaterService {
 
     private final UserScoreRepository userScoreRepository;
 
     private final UserScoreCacheService userScoreCacheService;
 
     @Autowired
-    public UserScoreUpdaterUpdaterServiceImpl(UserScoreRepository userScoreRepository,
-                                              UserScoreCacheService userScoreCacheService) {
+    public UserScoreUpdaterServiceImpl(UserScoreRepository userScoreRepository,
+                                       UserScoreCacheService userScoreCacheService) {
         this.userScoreRepository = userScoreRepository;
         this.userScoreCacheService = userScoreCacheService;
     }

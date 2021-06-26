@@ -8,9 +8,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,23 +20,6 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
     private static final String JEDIS_CACHE_KEY = "leaderboard";
 
     private final Jedis jedis = new Jedis("redis", 6379);
-
-    public void populate() {
-        Map<String, Double> scores = new HashMap<>();
-
-        scores.put("PlayerOne", 3000.0);
-        scores.put("PlayerTwo", 1500.0);
-        scores.put("PlayerThree", 8200.0);
-
-        scores.entrySet().forEach(playerScore -> {
-            jedis.zadd("ranking", playerScore.getValue(), playerScore.getKey());
-        });
-
-        String player = jedis.zrevrange("ranking", 0, 1).iterator().next();
-        logger.info("ranking bohhh " + player);
-        long rank = jedis.zrevrank("ranking", "PlayerOne");
-        logger.info("ranking bohhh " + rank);
-    }
 
     @Override
     public UserScore getUserScore(String userId) {
@@ -59,12 +40,12 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     @Override
     public void update(UserScoreModel userScoreModel) {
-        jedis.zadd("ranking", userScoreModel.getScore(), userScoreModel.getUserId());
+        jedis.zadd(JEDIS_CACHE_KEY, userScoreModel.getScore(), userScoreModel.getUserId());
     }
 
     @Override
     public List<UserScore> getFromRankRange(long fromRank, long toRank) {
-        Set<Tuple> userIdWithScoreSet = jedis.zrevrangeWithScores("ranking", fromRank - 1, toRank - 1);
+        Set<Tuple> userIdWithScoreSet = jedis.zrevrangeWithScores(JEDIS_CACHE_KEY, fromRank - 1, toRank - 1);
         return userIdWithScoreSet.stream().map(this::getUserScore).collect(Collectors.toList());
     }
 

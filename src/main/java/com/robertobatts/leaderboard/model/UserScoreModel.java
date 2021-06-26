@@ -16,7 +16,7 @@ public final class UserScoreModel {
     private long score;
 
     public UserScoreModel(String userId, long score) {
-        this.userId = ValidationUtils.checkIsNotNullOrEmpty(userId, "userId must not be null or empty");
+        this.userId = ValidationUtils.checkIsNotBlank(userId, "userId must not be null or empty");
         this.score = ValidationUtils.checkIsGte(score, 0, "score must not be negative");
     }
 
