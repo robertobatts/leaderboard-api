@@ -11,8 +11,8 @@ public class ValidationUtils {
         return string;
     }
 
-    public static long checkIsGte(long value, long min, String exceptionMessage) {
-        if (value < min) {
+    public static long checkIsGte(Long value, long min, String exceptionMessage) {
+        if (value == null || value < min) {
             throw new ValidationException(exceptionMessage);
         }
         return value;

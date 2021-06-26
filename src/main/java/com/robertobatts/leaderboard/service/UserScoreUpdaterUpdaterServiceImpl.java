@@ -1,48 +1,52 @@
 package com.robertobatts.leaderboard.service;
 
-import com.robertobatts.leaderboard.dto.UserScore;
-import com.robertobatts.leaderboard.exception.ValidationException;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 import com.robertobatts.leaderboard.repository.UserScoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import javax.annotation.PostConstruct;
+import java.util.List;
 
 @Service
-public final class UserScoreServiceImpl implements UserScoreService {
+public final class UserScoreUpdaterUpdaterServiceImpl implements UserScoreUpdaterService {
 
     private final UserScoreRepository userScoreRepository;
 
     private final UserScoreCacheService userScoreCacheService;
 
     @Autowired
-    public UserScoreServiceImpl(UserScoreRepository userScoreRepository,
-                                UserScoreCacheService userScoreCacheService) {
+    public UserScoreUpdaterUpdaterServiceImpl(UserScoreRepository userScoreRepository,
+                                              UserScoreCacheService userScoreCacheService) {
         this.userScoreRepository = userScoreRepository;
         this.userScoreCacheService = userScoreCacheService;
     }
 
-    @Override
-    public UserScore findByIdOrThrowException(String id) {
-        Optional<UserScoreModel> userScoreModelOpt = userScoreRepository.findById(id);
-        return userScoreModelOpt.map(UserScore::new)
-                .orElseThrow(() -> new ValidationException("userId does not exist :: userId=" + id));
+    @PostConstruct
+    private void populateCache() {
+        //TODO: findAll with paging to avoid loading too many records into memory?
+        List<UserScoreModel> userScoreModels = userScoreRepository.findAll();
+        userScoreModels.forEach(userScoreCacheService::update);
     }
 
     @Override
     public void saveUserScore(String userId, long score) {
-        //TODO update cache
         UserScoreModel userScoreModel = new UserScoreModel(userId, score);
         userScoreRepository.save(userScoreModel);
+        userScoreCacheService.update(userScoreModel);
+    }
+
+    @Override
+    public void incrementScore(String userId, long increment) {
+        long score = userScoreCacheService.getScore(userId);
+        saveUserScore(userId, score + increment);
     }
 
     @Override
     public void deleteByUserId(String userId) {
-        //TODO update cache
         //TODO check if record exists
         userScoreRepository.deleteById(userId);
+        userScoreCacheService.evict(userId);
     }
 
-    //TODO use Redis sorted sets to retrieve user ranking
 }

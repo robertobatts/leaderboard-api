@@ -11,13 +11,12 @@ public final class UserScore {
 
     private long score;
 
-    public UserScore(String userId, long score) {
+    private long rank;
+
+    public UserScore(String userId, long score, long rank) {
         this.userId = ValidationUtils.checkIsNotNullOrEmpty(userId, "userId must not be null or empty");
         this.score = ValidationUtils.checkIsGte(score, 0, "score cannot be negative");
-    }
-
-    public UserScore(UserScoreModel userScoreModel) {
-        this(userScoreModel.getUserId(), userScoreModel.getScore());
+        this.rank = ValidationUtils.checkIsGte(rank, 0, "rank cannot be negative");
     }
 
     public String getUserId() {
@@ -37,6 +36,7 @@ public final class UserScore {
         return "UserScore{" +
                 "userId='" + userId + '\'' +
                 ", score=" + score +
+                ", rank=" + rank +
                 '}';
     }
 
@@ -46,11 +46,12 @@ public final class UserScore {
         if (!(o instanceof UserScore)) return false;
         UserScore userScore = (UserScore) o;
         return score == userScore.score &&
+                rank == userScore.rank &&
                 Objects.equals(userId, userScore.userId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, score);
+        return Objects.hash(userId, score, rank);
     }
 }

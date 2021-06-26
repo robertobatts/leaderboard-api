@@ -1,12 +1,10 @@
 package com.robertobatts.leaderboard.service;
 
-import com.robertobatts.leaderboard.dto.UserScore;
-
-public interface UserScoreService {
-
-    UserScore findByIdOrThrowException(String id);
+public interface UserScoreUpdaterService {
 
     void saveUserScore(String userId, long score);
+
+    void incrementScore(String userId, long increment);
 
     void deleteByUserId(String userId);
 }
