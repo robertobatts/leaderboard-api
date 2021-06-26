@@ -1,6 +1,5 @@
 package com.robertobatts.leaderboard.model;
 
-import com.robertobatts.leaderboard.dto.UserScore;
 import com.robertobatts.leaderboard.utils.ValidationUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,10 +17,6 @@ public final class UserScoreModel {
     public UserScoreModel(String userId, long score) {
         this.userId = ValidationUtils.checkIsNotBlank(userId, "userId must not be null or empty");
         this.score = ValidationUtils.checkIsGte(score, 0, "score must not be negative");
-    }
-
-    public UserScoreModel(UserScore userScore) {
-        this(userScore.getUserId(), userScore.getScore());
     }
 
     public String getUserId() {

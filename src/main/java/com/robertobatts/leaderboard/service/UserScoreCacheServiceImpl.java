@@ -49,6 +49,12 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
         return userIdWithScoreSet.stream().map(this::getUserScore).collect(Collectors.toList());
     }
 
+    @Override
+    public List<UserScore> getFromAboveBelowRange(String userId, long above, long below) {
+        long userRank = getRank(userId);
+        return getFromRankRange(userRank - above, userRank + below);
+    }
+
     private UserScore getUserScore(Tuple tuple) {
         String userId = tuple.getElement();
         Double score = tuple.getScore();
@@ -61,8 +67,4 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
         jedis.zrem(JEDIS_CACHE_KEY, userId);
     }
 
-    @Override
-    public void evict(UserScoreModel userScoreModel) {
-        evict(userScoreModel.getUserId());
-    }
 }

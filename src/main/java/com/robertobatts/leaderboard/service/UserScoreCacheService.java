@@ -15,7 +15,8 @@ public interface UserScoreCacheService {
 
     List<UserScore> getFromRankRange(long fromRank, long toRank);
 
+    List<UserScore> getFromAboveBelowRange(String userId, long above, long below);
+
     void evict(String userId);
 
-    void evict(UserScoreModel userScoreModel);
 }

@@ -55,4 +55,10 @@ public final class AdminLeaderboardController {
         List<UserScore> userScores = userScoreCacheService.getFromRankRange(fromRank, toRank);
         return ResponseEntity.ok(userScores);
     }
+
+    @DeleteMapping("/user")
+    public ResponseEntity deleteUser(@RequestParam("userId") String userId) {
+        userScoreUpdaterService.deleteByUserId(userId);
+        return ResponseEntity.ok().build();
+    }
 }
