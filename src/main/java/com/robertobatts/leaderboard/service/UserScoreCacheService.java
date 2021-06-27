@@ -19,4 +19,6 @@ public interface UserScoreCacheService {
 
     void evict(String userId);
 
+    void evictAll();
+
 }

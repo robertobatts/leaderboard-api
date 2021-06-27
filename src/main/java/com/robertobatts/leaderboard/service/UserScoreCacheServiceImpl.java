@@ -4,6 +4,7 @@ import com.robertobatts.leaderboard.dto.UserScore;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
@@ -19,7 +20,11 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     private static final String JEDIS_CACHE_KEY = "leaderboard";
 
-    private final Jedis jedis = new Jedis("redis", 6379);
+    private final Jedis jedis;
+
+    public UserScoreCacheServiceImpl() {
+        jedis = new Jedis("localhost", 6379);
+    }
 
     @Override
     public UserScore getUserScore(String userId) {
@@ -67,4 +72,8 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
         jedis.zrem(JEDIS_CACHE_KEY, userId);
     }
 
+    @Override
+    public void evictAll() {
+        jedis.flushAll();
+    }
 }

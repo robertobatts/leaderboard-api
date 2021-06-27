@@ -26,8 +26,8 @@ public final class UserScore {
         return score;
     }
 
-    public void setScore(long score) {
-        this.score = score;
+    public long getRank() {
+        return rank;
     }
 
     @Override
