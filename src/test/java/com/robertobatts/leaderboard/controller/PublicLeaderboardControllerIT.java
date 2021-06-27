@@ -17,16 +17,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
 @SpringBootTest
 @Testcontainers
-public class AdminLeaderboardControllerIT {
+public class PublicLeaderboardControllerIT {
 
-    private static final String CONTROLLER_PREFIX = "/admin";
+    private static final String CONTROLLER_PREFIX = "/public";
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,21 +48,20 @@ public class AdminLeaderboardControllerIT {
     }
 
     @Test
-    public void givenSetScoreRequest_thenDataIsUpserted() throws Exception {
-        String userId = "jack125";
-        //insert
-        mockMvc.perform(put(CONTROLLER_PREFIX + "/set-score")
-                .param("userId", userId)
-                .param("score", "500"))
-                .andExpect(status().isOk());
-        assertDataIsInsertedInCacheAndDb(userId, 500, 1);
+    public void givenGetScoreRequest_whenDataIsPresent_thenDataIsRetrieved() throws Exception {
+        userScoreUpdaterService.saveUserScore("john_fasd", 4321);
 
-        //update
-        mockMvc.perform(put(CONTROLLER_PREFIX + "/set-score")
-                .param("userId", userId)
-                .param("score", "600"))
-                .andExpect(status().isOk());
-        assertDataIsInsertedInCacheAndDb(userId, 600, 1);
+        mockMvc.perform(get(CONTROLLER_PREFIX + "/get-score")
+                .param("userId", "john_fasd"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("4321"));
+    }
+
+    @Test
+    public void givenGetScoreRequest_whenDataIsNotPresent_thenIsNoContent() throws Exception {
+        mockMvc.perform(get(CONTROLLER_PREFIX + "/get-score")
+                .param("userId", "john_fasd"))
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -77,15 +77,13 @@ public class AdminLeaderboardControllerIT {
     }
 
     @Test
-    public void givenIncrementScoreRequest_whenIncrementIsNegative_thenDataIsDecremented() throws Exception {
+    public void givenIncrementScoreRequest_whenIncrementIsNegative_thenIsBadRequest() throws Exception {
         userScoreUpdaterService.saveUserScore("john_doe", 200);
 
         mockMvc.perform(put(CONTROLLER_PREFIX + "/increment-score")
                 .param("userId", "john_doe")
                 .param("increment", "-50"))
-                .andExpect(status().isOk());
-
-        assertDataIsInsertedInCacheAndDb("john_doe", 150, 1);
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -98,79 +96,67 @@ public class AdminLeaderboardControllerIT {
     }
 
     @Test
-    public void givenGetUserRequest_whenDataIsPresent_thenDataIsRetrieved() throws Exception {
-        userScoreUpdaterService.saveUserScore("john_fasd", 1234);
+    public void givenGetUsersRequest_whenAboveIsGteUserRank_thenDataIsRetrieved() throws Exception {
+        userScoreUpdaterService.saveUserScore("a", 20); //4
+        userScoreUpdaterService.saveUserScore("b", 10); //5
+        userScoreUpdaterService.saveUserScore("c", 30); //3
+        userScoreUpdaterService.saveUserScore("d", 50); //1
+        userScoreUpdaterService.saveUserScore("e", 35); //2
+        String expectedJson = "[ { 'userId': 'd', 'score': 50, 'rank': 1}, { 'userId': 'e', 'score': 35, 'rank': 2}, " +
+                "{ 'userId': 'c', 'score': 30, 'rank': 3} ]";
 
-        mockMvc.perform(get(CONTROLLER_PREFIX + "/user")
-                .param("userId", "john_fasd"))
+        mockMvc.perform(get(CONTROLLER_PREFIX + "/users")
+                .param("userId", "e")
+                .param("above", "10")
+                .param("below", "1"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{ 'userId': 'john_fasd', 'score': 1234, 'rank': 1}"));
+                .andExpect(content().json(expectedJson));
     }
 
     @Test
-    public void givenGetUserRequest_whenDataIsNotPresent_thenDataIsRetrieved() throws Exception {
-        mockMvc.perform(get(CONTROLLER_PREFIX + "/user")
-                .param("userId", "john_fasd"))
-                .andExpect(status().isNoContent());
-    }
-
-
-    @Test
-    public void givenGetUsersRequest_whenRankRangeIsValid_thenDataIsRetrieved() throws Exception {
+    public void givenGetUsersRequest_whenAboveAndBelowAreValid_thenDataIsRetrieved() throws Exception {
         userScoreUpdaterService.saveUserScore("a", 20); //4
         userScoreUpdaterService.saveUserScore("b", 10); //5
         userScoreUpdaterService.saveUserScore("c", 30); //3
         userScoreUpdaterService.saveUserScore("d", 50); //1
         userScoreUpdaterService.saveUserScore("e", 35); //2
         String expectedJson = "[ { 'userId': 'e', 'score': 35, 'rank': 2}, { 'userId': 'c', 'score': 30, 'rank': 3}," +
-                "{ 'userId': 'a', 'score': 20, 'rank': 4}]";
+                "{ 'userId': 'a', 'score': 20, 'rank': 4} ]";
 
         mockMvc.perform(get(CONTROLLER_PREFIX + "/users")
-                .param("fromRank", "2")
-                .param("toRank", "4"))
+                .param("userId", "e")
+                .param("above", "0")
+                .param("below", "2"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
     }
 
     @Test
-    public void givenGetUsersRequest_whenFromRankIsLteZeroOrIsGtToRank_thenIsBadRequest() throws Exception {
+    public void givenGetUsersRequest_whenAboveOrBelowAreNegative_thenIsBadRequest() throws Exception {
         mockMvc.perform(get(CONTROLLER_PREFIX + "/users")
-                .param("fromRank", "-2")
-                .param("toRank", "4"))
+                .param("userId", "e")
+                .param("above", "-2")
+                .param("below", "4"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
         mockMvc.perform(get(CONTROLLER_PREFIX + "/users")
-                .param("fromRank", "10")
-                .param("toRank", "2"))
+                .param("userId", "e")
+                .param("above", "10")
+                .param("below", "-2"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void givenDeleteUserRequest_whenDataIsPresent_thenIsNotFound() throws Exception {
-        String userId = "john_fasd";
-        mockMvc.perform(delete(CONTROLLER_PREFIX + "/user")
-                .param("userId", userId))
+    public void givenGetUsersRequest_whenUserIdDoesNotExist_thenIsNotFound() throws Exception {
+        mockMvc.perform(get(CONTROLLER_PREFIX + "/users")
+                .param("userId", "edsadsa")
+                .param("above", "1")
+                .param("below", "4"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
-
-    @Test
-    public void givenDeleteUserRequest_whenDataIsNotPresent_thenDataIsRemoved() throws Exception {
-        String userId = "john_fasd";
-        userScoreUpdaterService.saveUserScore(userId, 1234);
-
-        mockMvc.perform(delete(CONTROLLER_PREFIX + "/user")
-                .param("userId", userId))
-                .andExpect(status().isOk());
-
-        boolean existsInDb = userScoreRepository.existsById(userId);
-        assertThat(existsInDb).isFalse();
-        Optional<UserScore> userScoreOpt = userScoreCacheService.getUserScore(userId);
-        assertThat(userScoreOpt).isNotPresent();
-    }
-
 
     private void assertDataIsInsertedInCacheAndDb(String userId, long expectedScore, long expectedRank) {
         Optional<UserScoreModel> userScoreModelOpt = userScoreRepository.findById(userId);

@@ -1,6 +1,7 @@
 package com.robertobatts.leaderboard.controller;
 
 import com.robertobatts.leaderboard.dto.UserScore;
+import com.robertobatts.leaderboard.exception.NotFoundException;
 import com.robertobatts.leaderboard.exception.ValidationException;
 import com.robertobatts.leaderboard.service.UserScoreCacheService;
 import com.robertobatts.leaderboard.service.UserScoreUpdaterService;
@@ -47,11 +48,15 @@ public final class PublicLeaderboardController {
     public ResponseEntity getUsers(@RequestParam("userId") String userId,
                                    @RequestParam("above") long above, @RequestParam("below") long below) {
         if (above < 0 || below < 0) {
-            throw new ValidationException("above and below must be positive :: " +
+            throw new ValidationException("above and below must be greater than zero :: " +
                     "above=" + above + ", below=" + below);
         }
         List<UserScore> userScores = userScoreCacheService.getFromAboveBelowRange(userId, above, below);
-        return ResponseEntity.ok(userScores);
+        if (!userScores.isEmpty()) {
+            return ResponseEntity.ok(userScores);
+        }
+
+        throw new NotFoundException("userId not found :: userId=" + userId);
     }
 
 }
