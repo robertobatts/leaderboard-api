@@ -1,4 +1,4 @@
-package com.robertobatts.leaderboard.exception;
+package com.robertobatts.leaderboard.dto;
 
 import org.springframework.http.HttpStatus;
 

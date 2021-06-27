@@ -1,7 +1,6 @@
 package com.robertobatts.leaderboard.service;
 
 import com.robertobatts.leaderboard.dto.UserScore;
-import com.robertobatts.leaderboard.model.UserScoreModel;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +11,7 @@ public interface UserScoreCacheService {
 
     Optional<Long> getScore(String userId);
 
-    void update(UserScoreModel userScoreModel);
+    void upsert(String userId, long score);
 
     List<UserScore> getFromRankRange(long fromRank, long toRank);
 

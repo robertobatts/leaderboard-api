@@ -1,6 +1,6 @@
 package com.robertobatts.leaderboard.controller;
 
-import com.robertobatts.leaderboard.exception.ApiExceptionResponse;
+import com.robertobatts.leaderboard.dto.ApiExceptionResponse;
 import com.robertobatts.leaderboard.exception.NotFoundException;
 import com.robertobatts.leaderboard.exception.ValidationException;
 import org.slf4j.Logger;

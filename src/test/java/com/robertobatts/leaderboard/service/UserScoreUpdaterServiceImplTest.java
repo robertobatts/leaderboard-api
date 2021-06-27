@@ -39,7 +39,7 @@ public class UserScoreUpdaterServiceImplTest {
         userScoreUpdaterService.saveUserScore(userId, score);
 
         verify(userScoreRepository, times(1)).save(userScoreModel);
-        verify(userScoreCacheService, times(1)).update(userScoreModel);
+        verify(userScoreCacheService, times(1)).upsert(userId, score);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class UserScoreUpdaterServiceImplTest {
         userScoreUpdaterService.incrementScore(userId, increment);
 
         verify(userScoreRepository, times(1)).save(incrementedUserScoreModel);
-        verify(userScoreCacheService, times(1)).update(incrementedUserScoreModel);
+        verify(userScoreCacheService, times(1)).upsert(userId, score + increment);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package com.robertobatts.leaderboard.service;
 
 import com.robertobatts.leaderboard.dto.UserScore;
-import com.robertobatts.leaderboard.model.UserScoreModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,8 +60,8 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
     }
 
     @Override
-    public void update(UserScoreModel userScoreModel) {
-        jedis.zadd(JEDIS_CACHE_KEY, userScoreModel.getScore(), userScoreModel.getUserId());
+    public void upsert(String userId, long score) {
+        jedis.zadd(JEDIS_CACHE_KEY, score, userId);
     }
 
     @Override

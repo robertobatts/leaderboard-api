@@ -5,6 +5,7 @@ import com.robertobatts.leaderboard.model.UserScoreModel;
 import com.robertobatts.leaderboard.repository.UserScoreRepository;
 import com.robertobatts.leaderboard.service.UserScoreCacheService;
 import com.robertobatts.leaderboard.service.UserScoreUpdaterService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,7 @@ public class AdminLeaderboardControllerIT {
     @Autowired
     private UserScoreCacheService userScoreCacheService;
 
-    @BeforeEach
+    @AfterEach
     public void afterEach() {
         userScoreRepository.deleteAll();
         userScoreCacheService.evictAll();

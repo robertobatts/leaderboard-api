@@ -4,9 +4,13 @@ import com.robertobatts.leaderboard.exception.NotFoundException;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 import com.robertobatts.leaderboard.repository.UserScoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +32,22 @@ public final class UserScoreUpdaterServiceImpl implements UserScoreUpdaterServic
 
     @PostConstruct
     private void populateCache() {
-        //TODO: findAll with paging to avoid loading too many records into memory?
-        List<UserScoreModel> userScoreModels = userScoreRepository.findAll();
-        userScoreModels.forEach(userScoreCacheService::update);
+        int pageId = 0;
+        int pageSize = 5000;
+        List<UserScoreModel> userScoreModelsPage;
+        do {
+            Pageable pageable = PageRequest.of(pageId, pageSize);
+            userScoreModelsPage = userScoreRepository.findAll(pageable).getContent();
+            userScoreModelsPage.forEach(model -> userScoreCacheService.upsert(model.getUserId(), model.getScore()));
+            pageId++;
+        } while (!userScoreModelsPage.isEmpty());
     }
 
     @Override
     public void saveUserScore(String userId, long score) {
         UserScoreModel userScoreModel = new UserScoreModel(userId, score);
         userScoreRepository.save(userScoreModel);
-        userScoreCacheService.update(userScoreModel);
+        userScoreCacheService.upsert(userId, score);
     }
 
     @Override
