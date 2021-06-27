@@ -3,7 +3,9 @@ package com.robertobatts.leaderboard.repository;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
@@ -14,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 public class UserScoreRepositoryIT {
 
+    @Autowired
     private UserScoreRepository userScoreRepository;
 
     @AfterEach

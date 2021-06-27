@@ -1,8 +1,6 @@
 package com.robertobatts.leaderboard.service;
 
 import com.robertobatts.leaderboard.dto.UserScore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -17,8 +15,6 @@ import java.util.stream.Collectors;
 
 @Service
 public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserScoreCacheServiceImpl.class);
 
     private static final String JEDIS_CACHE_KEY = "leaderboard";
 
@@ -61,6 +57,7 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     @Override
     public void upsert(String userId, long score) {
+
         jedis.zadd(JEDIS_CACHE_KEY, score, userId);
     }
 

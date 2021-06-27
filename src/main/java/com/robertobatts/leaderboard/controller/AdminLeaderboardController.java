@@ -4,6 +4,8 @@ import com.robertobatts.leaderboard.dto.UserScore;
 import com.robertobatts.leaderboard.exception.ValidationException;
 import com.robertobatts.leaderboard.service.UserScoreCacheService;
 import com.robertobatts.leaderboard.service.UserScoreUpdaterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +16,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/admin")
 public final class AdminLeaderboardController {
-
-    //TODO add logs
-    //TODO add comments
 
     private UserScoreUpdaterService userScoreUpdaterService;
 

@@ -66,6 +66,15 @@ public class AdminLeaderboardControllerIT {
     }
 
     @Test
+    public void givenSetScoreRequest_whenScoreIsDouble_thenInternalServerError() throws Exception {
+        String userId = "jack125";
+        mockMvc.perform(put(CONTROLLER_PREFIX + "/set-score")
+                .param("userId", userId)
+                .param("score", "500.1"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
     public void givenIncrementScoreRequest_whenIncrementIsPositive_thenDataIsIncremented() throws Exception {
         userScoreUpdaterService.saveUserScore("john_doe", 200);
 
