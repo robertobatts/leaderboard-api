@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/admin")
@@ -42,18 +43,28 @@ public final class AdminLeaderboardController {
 
     @GetMapping("/user")
     public ResponseEntity getUser(@RequestParam("userId") String userId) {
-        UserScore userScore = userScoreCacheService.getUserScore(userId);
-        return ResponseEntity.ok(userScore);
+        Optional<UserScore> userScoreOpt = userScoreCacheService.getUserScore(userId);
+        if (userScoreOpt.isPresent()) {
+            return ResponseEntity.ok(userScoreOpt.get());
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/users")
     public ResponseEntity getUsers(@RequestParam("fromRank") long fromRank, @RequestParam("toRank") long toRank) {
+        if (fromRank <=0 || toRank <= 0) {
+            throw new ValidationException("fromRank and toRank must be greater than zero :: " +
+                    "fromRank=" + fromRank + ", toRank=" + toRank);
+        }
         if (fromRank > toRank) {
             throw new ValidationException("fromRank must be smaller or equal than toRank :: " +
                     "fromRank=" + fromRank + ", toRank=" + toRank);
         }
         List<UserScore> userScores = userScoreCacheService.getFromRankRange(fromRank, toRank);
-        return ResponseEntity.ok(userScores);
+        if (!userScores.isEmpty()) {
+            return ResponseEntity.ok(userScores);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/user")

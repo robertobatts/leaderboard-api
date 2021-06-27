@@ -4,12 +4,13 @@ import com.robertobatts.leaderboard.dto.UserScore;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserScoreCacheService {
 
-    UserScore getUserScore(String userId);
+    Optional<UserScore> getUserScore(String userId);
 
-    long getScore(String userId);
+    Optional<Long> getScore(String userId);
 
     void update(UserScoreModel userScoreModel);
 

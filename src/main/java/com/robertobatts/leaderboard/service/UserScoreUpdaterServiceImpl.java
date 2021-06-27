@@ -1,5 +1,6 @@
 package com.robertobatts.leaderboard.service;
 
+import com.robertobatts.leaderboard.exception.NotFoundException;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 import com.robertobatts.leaderboard.repository.UserScoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,9 +8,12 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public final class UserScoreUpdaterServiceImpl implements UserScoreUpdaterService {
+
+    private static final String USER_ID_NOT_FOUND_MESSAGE = "[USER_SCORE_EXC-001] - userId does not exist :: userId=";
 
     private final UserScoreRepository userScoreRepository;
 
@@ -38,13 +42,20 @@ public final class UserScoreUpdaterServiceImpl implements UserScoreUpdaterServic
 
     @Override
     public void incrementScore(String userId, long increment) {
-        long score = userScoreCacheService.getScore(userId);
-        saveUserScore(userId, score + increment);
+        Optional<Long> scoreOpt = userScoreCacheService.getScore(userId);
+        if (scoreOpt.isPresent()) {
+            saveUserScore(userId, scoreOpt.get() + increment);
+        } else {
+            throw new NotFoundException(USER_ID_NOT_FOUND_MESSAGE + userId);
+        }
     }
 
     @Override
     public void deleteByUserId(String userId) {
-        //TODO check if record exists
+        boolean exists = userScoreRepository.existsById(userId);
+        if (!exists) {
+            throw new NotFoundException(USER_ID_NOT_FOUND_MESSAGE + userId);
+        }
         userScoreRepository.deleteById(userId);
         userScoreCacheService.evict(userId);
     }

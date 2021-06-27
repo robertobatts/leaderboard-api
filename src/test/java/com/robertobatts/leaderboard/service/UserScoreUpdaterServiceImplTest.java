@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Optional;
+
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -47,7 +49,7 @@ public class UserScoreUpdaterServiceImplTest {
         long score = 1000;
         UserScoreModel incrementedUserScoreModel = new UserScoreModel(userId, score + increment);
 
-        when(userScoreCacheService.getScore(userId)).thenReturn(score);
+        when(userScoreCacheService.getScore(userId)).thenReturn(Optional.of(score));
         userScoreUpdaterService.incrementScore(userId, increment);
 
         verify(userScoreRepository, times(1)).save(incrementedUserScoreModel);
@@ -60,7 +62,7 @@ public class UserScoreUpdaterServiceImplTest {
         long increment = -3000;
         long score = 500;
 
-        when(userScoreCacheService.getScore(userId)).thenReturn(score);
+        when(userScoreCacheService.getScore(userId)).thenReturn(Optional.of(score));
 
         Assertions.assertThrows(ValidationException.class, () -> userScoreUpdaterService.incrementScore(userId, increment));
     }

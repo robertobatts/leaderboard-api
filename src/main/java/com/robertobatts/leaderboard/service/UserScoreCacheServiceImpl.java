@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
 
+import javax.annotation.PostConstruct;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,27 +23,41 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     private static final String JEDIS_CACHE_KEY = "leaderboard";
 
-    private final Jedis jedis;
+    @Value("${spring.redis.host}")
+    private String host;
 
-    public UserScoreCacheServiceImpl() {
-        jedis = new Jedis("localhost", 6379);
+    @Value("${spring.redis.port}")
+    private int port;
+
+    private Jedis jedis;
+
+    @PostConstruct
+    public void init() {
+        jedis = new Jedis(host, port);
     }
 
     @Override
-    public UserScore getUserScore(String userId) {
-        //TODO throw exception if not found
-        long rank = getRank(userId);
-        long score = getScore(userId);
-        return new UserScore(userId, score, rank);
+    public Optional<UserScore> getUserScore(String userId) {
+        Optional<Long> score = getScore(userId);
+        if (score.isPresent()) {
+            Optional<Long> rankOpt = getRank(userId);
+            return Optional.of(new UserScore(userId, score.get(), rankOpt.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
-    public long getScore(String userId) {
-        return jedis.zscore(JEDIS_CACHE_KEY, userId).longValue();
+    public Optional<Long> getScore(String userId) {
+        Optional<Double> scoreOpt= Optional.ofNullable(jedis.zscore(JEDIS_CACHE_KEY, userId));
+        return scoreOpt.map(Double::longValue);
     }
 
-    private long getRank(String userId) {
-        return jedis.zrevrank(JEDIS_CACHE_KEY, userId) + 1;
+    private Optional<Long> getRank(String userId) {
+        Long rank = jedis.zrevrank(JEDIS_CACHE_KEY, userId);
+        if (rank == null) {
+            return Optional.empty();
+        }
+        return Optional.of(rank + 1);
     }
 
     @Override
@@ -56,15 +73,19 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     @Override
     public List<UserScore> getFromAboveBelowRange(String userId, long above, long below) {
-        long userRank = getRank(userId);
-        return getFromRankRange(userRank - above, userRank + below);
+        Optional<Long> userRankOpt = getRank(userId);
+        if (userRankOpt.isPresent()) {
+            return getFromRankRange(userRankOpt.get() - above, userRankOpt.get() + below);
+        }
+        return Collections.emptyList();
     }
 
     private UserScore getUserScore(Tuple tuple) {
         String userId = tuple.getElement();
         Double score = tuple.getScore();
-        long rank = getRank(userId);
-        return new UserScore(userId, score.longValue(), rank);
+        Optional<Long> rankOpt = getRank(userId);
+        //not calling rankOpt.isPresent() because it must exist, the tuple is in fact been retrieved from the cache by userId
+        return new UserScore(userId, score.longValue(), rankOpt.get());
     }
 
     @Override

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/public")
@@ -26,8 +27,11 @@ public final class PublicLeaderboardController {
 
     @GetMapping("/get-score")
     public ResponseEntity getScore(@RequestParam("userId") String userId) {
-        long score = userScoreCacheService.getScore(userId);
-        return ResponseEntity.ok(score);
+        Optional<Long> scoreOpt = userScoreCacheService.getScore(userId);
+        if (scoreOpt.isPresent()) {
+            return ResponseEntity.ok(scoreOpt.get());
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/increment-score")
