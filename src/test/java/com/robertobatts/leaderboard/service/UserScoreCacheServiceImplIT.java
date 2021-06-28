@@ -9,6 +9,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,6 +41,31 @@ public class UserScoreCacheServiceImplIT {
             userScoreCacheService.upsert(userId, score);
         }
 
+        assertRankRangeIsSortedCorrectly(listSize);
+    }
+
+    @Test
+    public void givenThousandsOfRandomUserScoresInsertedConcurrently_whenGetFromRankRangeIsCalled_thenRankingIsCorrect()
+            throws ExecutionException, InterruptedException {
+        int listSize = 10000;
+        Random random = new Random();
+        ExecutorService executor = Executors.newFixedThreadPool(listSize);
+        List<Future> futures = new ArrayList<>();
+        for (int i = 0; i < listSize; i++) {
+            long score = random.nextLong();
+            final long positiveScore = score < 0 ? (score + 1) * (-1) : score;
+            final String userId = String.valueOf(i);
+            Future future = executor.submit(() -> { userScoreCacheService.upsert(userId, positiveScore); });
+            futures.add(future);
+        }
+        for (Future future : futures) {
+            future.get();
+        }
+
+        assertRankRangeIsSortedCorrectly(listSize);
+    }
+
+    private void assertRankRangeIsSortedCorrectly(int listSize) {
         List<UserScore> userScoreList = userScoreCacheService.getFromRankRange(1, listSize);
         assertThat(userScoreList).hasSize(listSize);
         UserScore previous = userScoreList.get(0);

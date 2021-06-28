@@ -7,6 +7,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Tuple;
 
 import java.lang.reflect.Field;
@@ -21,6 +22,9 @@ public class UserScoreCacheServiceImplTest {
     private static final String JEDIS_CACHE_KEY = "leaderboard";
 
     @Mock
+    private JedisPool jedisPool;
+
+    @Mock
     private Jedis jedis;
 
     private UserScoreCacheService userScoreCacheService;
@@ -29,9 +33,10 @@ public class UserScoreCacheServiceImplTest {
     public void setUp() throws Exception {
         userScoreCacheService = new UserScoreCacheServiceImpl();
         //reflection is the only way to inject the jedis mock inside cache service
-        Field jedisField = userScoreCacheService.getClass().getDeclaredField("jedis");
-        jedisField.setAccessible(true);
-        jedisField.set(userScoreCacheService, jedis);
+        Field jedisPoolField = userScoreCacheService.getClass().getDeclaredField("jedisPool");
+        jedisPoolField.setAccessible(true);
+        jedisPoolField.set(userScoreCacheService, jedisPool);
+        when(jedisPool.getResource()).thenReturn(jedis);
     }
 
     @Test
@@ -50,7 +55,7 @@ public class UserScoreCacheServiceImplTest {
         UserScore userScore = new UserScore(userId, 5400, 1);
 
         when(jedis.zscore(JEDIS_CACHE_KEY, userId)).thenReturn((double) userScore.getScore());
-        when(jedis.zrevrank(JEDIS_CACHE_KEY, userId)).thenReturn(userScore.getRank());
+        when(jedis.zrevrank(JEDIS_CACHE_KEY, userId)).thenReturn(userScore.getRank() - 1);
         Optional<UserScore> resultOpt = userScoreCacheService.getUserScore(userScore.getUserId());
 
         assertThat(resultOpt).isPresent();

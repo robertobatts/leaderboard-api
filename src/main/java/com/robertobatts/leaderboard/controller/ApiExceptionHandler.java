@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
@@ -38,7 +43,9 @@ public class ApiExceptionHandler {
     }
 
     private void logExceptionWithWebRequestInfo(Exception e, ServletWebRequest request) {
-        logger.error("REST endpoint error :: uri=" + request.getRequest().getRequestURI() + ", parameters=" + request.getParameterMap(), e);
+        Map<String, String> params = new HashMap<>();
+        request.getParameterMap().forEach((name, values) -> params.put(name, Arrays.toString(values)));
+        logger.error("REST endpoint error :: uri=" + request.getRequest().getRequestURI() + ", parameters=" + params, e);
     }
 
 }

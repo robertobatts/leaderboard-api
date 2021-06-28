@@ -4,6 +4,7 @@ import com.robertobatts.leaderboard.dto.UserScore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Tuple;
 
 import javax.annotation.PostConstruct;
@@ -24,11 +25,11 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
     @Value("${spring.redis.port}")
     private int port;
 
-    private Jedis jedis;
+    private JedisPool jedisPool;
 
     @PostConstruct
     public void init() {
-        jedis = new Jedis(host, port);
+        jedisPool = new JedisPool(host, port); //JedisPool is thread safe
     }
 
     @Override
@@ -43,28 +44,35 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     @Override
     public Optional<Long> getScore(String userId) {
-        Optional<Double> scoreOpt= Optional.ofNullable(jedis.zscore(JEDIS_CACHE_KEY, userId));
-        return scoreOpt.map(Double::longValue);
+        try (Jedis jedis = jedisPool.getResource()) {
+            Optional<Double> scoreOpt = Optional.ofNullable(jedis.zscore(JEDIS_CACHE_KEY, userId));
+            return scoreOpt.map(Double::longValue);
+        }
     }
 
     private Optional<Long> getRank(String userId) {
-        Long rank = jedis.zrevrank(JEDIS_CACHE_KEY, userId);
-        if (rank == null) {
-            return Optional.empty();
+        try (Jedis jedis = jedisPool.getResource()) {
+            Long rank = jedis.zrevrank(JEDIS_CACHE_KEY, userId);
+            if (rank == null) {
+                return Optional.empty();
+            }
+            return Optional.of(rank + 1);
         }
-        return Optional.of(rank + 1);
     }
 
     @Override
     public void upsert(String userId, long score) {
-
-        jedis.zadd(JEDIS_CACHE_KEY, score, userId);
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.zadd(JEDIS_CACHE_KEY, score, userId);
+        }
     }
 
     @Override
     public List<UserScore> getFromRankRange(long fromRank, long toRank) {
-        Set<Tuple> userIdWithScoreSet = jedis.zrevrangeWithScores(JEDIS_CACHE_KEY, fromRank - 1, toRank - 1);
-        return userIdWithScoreSet.stream().map(this::getUserScore).collect(Collectors.toList());
+        try (Jedis jedis = jedisPool.getResource()) {
+            Set<Tuple> userIdWithScoreSet = jedis.zrevrangeWithScores(JEDIS_CACHE_KEY, fromRank - 1, toRank - 1);
+            return userIdWithScoreSet.stream().map(this::getUserScore).collect(Collectors.toList());
+        }
     }
 
     @Override
@@ -86,11 +94,15 @@ public final class UserScoreCacheServiceImpl implements UserScoreCacheService {
 
     @Override
     public void evict(String userId) {
-        jedis.zrem(JEDIS_CACHE_KEY, userId);
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.zrem(JEDIS_CACHE_KEY, userId);
+        }
     }
 
     @Override
     public void evictAll() {
-        jedis.flushAll();
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.flushAll();
+        }
     }
 }
