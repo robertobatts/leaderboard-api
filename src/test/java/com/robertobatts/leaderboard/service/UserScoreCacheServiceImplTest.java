@@ -1,11 +1,13 @@
 package com.robertobatts.leaderboard.service;
 
 import com.robertobatts.leaderboard.dto.UserScore;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Tuple;
@@ -13,10 +15,11 @@ import redis.clients.jedis.Tuple;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@RunWith(JUnitPlatform.class)
 public class UserScoreCacheServiceImplTest {
 
     private static final String JEDIS_CACHE_KEY = "leaderboard";
@@ -29,7 +32,7 @@ public class UserScoreCacheServiceImplTest {
 
     private UserScoreCacheService userScoreCacheService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         userScoreCacheService = new UserScoreCacheServiceImpl();
         //reflection is the only way to inject the jedis mock inside cache service
@@ -90,8 +93,8 @@ public class UserScoreCacheServiceImplTest {
             tupleSet.add(tupleList.get(i - 1));
         }
         when(jedis.zrevrangeWithScores(JEDIS_CACHE_KEY, fromRank - 1, toRank - 1)).thenReturn(tupleSet);
-        for (int i = 0; i < tupleList.size(); i++) {
-            when(jedis.zrevrank(JEDIS_CACHE_KEY, tupleList.get(i).getElement())).thenReturn((long) i);
+        for (int i = fromRank; i <= toRank; i++) {
+            when(jedis.zrevrank(JEDIS_CACHE_KEY, tupleList.get(i - 1).getElement())).thenReturn((long) i - 1);
         }
         List<UserScore> resultList = userScoreCacheService.getFromRankRange(fromRank, toRank);
 

@@ -3,18 +3,22 @@ package com.robertobatts.leaderboard.service;
 import com.robertobatts.leaderboard.exception.ValidationException;
 import com.robertobatts.leaderboard.model.UserScoreModel;
 import com.robertobatts.leaderboard.repository.UserScoreRepository;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@RunWith(JUnitPlatform.class)
 public class UserScoreUpdaterServiceImplTest {
 
     private UserScoreUpdaterService userScoreUpdaterService;
@@ -25,7 +29,7 @@ public class UserScoreUpdaterServiceImplTest {
     @Mock
     private UserScoreCacheService userScoreCacheService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.userScoreUpdaterService = new UserScoreUpdaterServiceImpl(userScoreRepository, userScoreCacheService);
     }
