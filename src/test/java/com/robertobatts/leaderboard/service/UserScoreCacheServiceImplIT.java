@@ -73,6 +73,7 @@ public class UserScoreCacheServiceImplIT {
             UserScore current = userScoreList.get(i);
             assertThat(current.getRank()).isGreaterThan(previous.getRank());
             assertThat(current.getScore()).isLessThanOrEqualTo(previous.getScore());
+            previous = current;
         }
     }
 
